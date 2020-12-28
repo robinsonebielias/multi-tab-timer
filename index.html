@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown Timer</title>
+</head>
+
+<body>
+  <button onclick="startTimer(299)">Start Timer</button>
+  <script>
+    window.onload = () => {
+      window.bc = new BroadcastChannel('timer');
+      bc.onmessage = messageFromOtherTabs;
+    }
+
+    function messageFromOtherTabs(e) {
+      let title;
+      if (e.data.remainingTime) {
+        window.isParent = false;
+        //clearing interval if exist
+        clearInterval(window.timerInterval);
+        title = constructTitle(e.data.remainingTime - 1);
+        document.title = title;
+        window.bc.postMessage({
+          title
+        });
+        window.isChild = false;
+        startTimer(e.data.remainingTime - 2);
+      } else {
+        document.title = e.data.title;
+        window.isChild = true;
+      }
+    }
+
+    function startTimer(remainingTime) {
+      let title;
+      if (window.isChild) {
+        return;
+      }
+      window.timerInterval = setInterval(() => {
+        title = constructTitle(remainingTime);
+        window.bc.postMessage({
+          title
+        });
+        window.isParent = true;
+        document.title = title;
+        window.remainingTime = remainingTime;
+        if (!remainingTime) {
+          clearInterval(window.timerInterval);
+        }
+        remainingTime--;
+      }, 1000);
+    }
+
+    function constructTitle(remainingTime) {
+      const minutes = Math.floor(remainingTime / 60) - (Math.floor(remainingTime / 60 / 60) * 60),
+        seconds = remainingTime % 60;
+      return `${minutes} : ${seconds}`;
+    }
+
+    //On tab/window close
+    window.onbeforeunload = () => {
+      if (window.isParent) {
+        window.bc.postMessage({
+          remainingTime: window.remainingTime
+        });
+      }
+      window.bc.close();
+    }
+  </script>
+</body>
+
+</html>
