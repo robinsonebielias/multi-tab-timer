@@ -1,6 +1,6 @@
 # Multi Tab Countdown Timer
 
-Displaying countdown timer in all the open tabs title.
+Displaying countdown timer in all the open tabs title using BroadcastChannel.
 
 ## Steps
 
